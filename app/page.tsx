@@ -1,91 +1,115 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
-
-const inter = Inter({ subsets: ['latin'] })
+'use client';
+import useAutoComplete from '@/custom-hooks/useAutoComplete';
+import { useState } from 'react';
 
 export default function Home() {
+  const {
+    bindInput,
+    bindOptions,
+    bindOption,
+    isBusy,
+    suggestions,
+    selectedIndex,
+  } = useAutoComplete({
+    onChange: (value: string) => {
+      setShoppingList((prev) => [...prev, { value: value, isChecked: false }]);
+    },
+    source: async (search: string) => {
+      try {
+        const res = await fetch(
+          `https://api.frontendeval.com/fake/food/${search}`
+        );
+        const data = await res.json();
+        return data;
+      } catch (e) {
+        return [];
+      }
+    },
+  });
+
+  const handleCheck = (position: number) => {
+    setShoppingList(
+      shoppingList.map((item, index) => {
+        if (index === position) {
+          return { ...item, isChecked: !item.isChecked };
+        } else {
+          return item;
+        }
+      })
+    );
+  };
+
+  const handleDelete = (position: number) => {
+    setShoppingList(
+      shoppingList.filter((item, index) => {
+        return index !== position;
+      })
+    );
+  };
+
+  const [shoppingList, setShoppingList] = useState<
+    { isChecked: boolean; value: string }[]
+  >([]);
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className='min-h-screen w-screen flex justify-center'>
+      <div className='pt-5 flex flex-col'>
+        <h1 className='text-3xl font-bold'>My Shopping List</h1>
+        <div className='pt-5 w-96 relative'>
+          <input
+            type='text'
+            placeholder='Add items to your list...'
+            className='w-full  border border-black px-2 py-2'
+            {...bindInput}
+          />
+          {suggestions.length > 0 && (
+            <div className='border border-black max-h-60 overflow-y-scroll overflow-x-hidden scroll-smooth scrollbar absolute w-full z-10 bg-white'>
+              <ul className='px-1' {...bindOptions}>
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    value={suggestion}
+                    className='hover:bg-slate-300 ` + (selectedIndex === index && "bg-slate-300")'
+                    {...bindOption}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className='mt-3'>
+            <ul>
+              {shoppingList.map((item, index) => (
+                <li key={index} className='flex items-center w-full'>
+                  <input
+                    type='checkbox'
+                    id={item.value + index}
+                    value={item.value}
+                    checked={item.isChecked}
+                    onChange={() => handleCheck(index)}
+                    className={`w-4 h-4 text-blue-600 bg-gray-600 border-gray-300 rounded focus:ring-blue-500`}
+                  />
+                  <label
+                    className={`w-full py-1 ml-2 text-sm font-medium text-black ${
+                      item.isChecked && 'line-through'
+                    }`}
+                    htmlFor={item.value + index}
+                  >
+                    {item.value}
+                  </label>
+                  <button
+                    className='text-red-500'
+                    onClick={() => handleDelete(index)}
+                  >
+                    X
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
       </div>
     </main>
-  )
+  );
 }
