@@ -6,7 +6,7 @@ export default function useAutoComplete({
   onChange,
 }: any) {
   const [myTimeout, setMyTimeOut] = useState(setTimeout(() => {}, 0));
-  const listRef = useRef();
+  const listRef = useRef(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isBusy, setBusy] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -51,15 +51,15 @@ export default function useAutoComplete({
 
   return {
     bindOption: {
-      onClick: (e: React.ChangeEvent<HTMLInputElement>) => {
-        let nodes = Array.from(listRef.current?.children);
+      onClick: (e:any) : any => {
+        let nodes: any = Array.from(listRef.current ? listRef?.current['children'] : '');
         selectOption(nodes.indexOf(e.target.closest('li')));
         setTextValue('');
       },
     },
     bindInput: {
       value: textValue,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      onChange: (e: any) : any =>
         onTextChange(e.target.value),
     },
     bindOptions: {
